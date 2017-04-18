@@ -334,7 +334,7 @@ def imprimer_carte(catalogue, centre, rayon, projection, selection, largeur=512,
         coordonnees = projection(changement_de_repere((catalogue[istar]["ra"] , catalogue[istar]["de"]) , centre))
         print(coordonnees)
 
-
+    f.write('</svg>')
     f.close()
 
 
