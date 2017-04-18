@@ -1,0 +1,38 @@
+Uro Pierrick - Ferdjani Luqman - Groupe 11
+AP1 2016-2017 L1S2 SESI Université de Lille 1 Sciences et Technologies
+Projet Carte du ciel
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Semaine du 20/03 :
+
+- fonction charge_bright_star_5 :
+
+nécessité de retirer les cas où les lignes sont vides mise à part les quelques premiers caractères
+
+- fonction calcul_centre_zone_observee :
+
+Y a-t-il une correspondance entre (longitude,latitude) et heure UTC ?
+Ramener l'heure à une simple modification de la long et lat
+	si il s'est écoulé x heures, la Terre a effectué une rotation de x*360/24 degrés dans le sens
+	horaire sur une vue depuis le pôle nord
+	donc si le temps est (x,y,z) soit t=x+(y/60)+(z/3600) heures, la longitude est réduite de t*360/24
+	(il faut aussi prendre en compte qu'il faut ramener la longitude dans l'intervale [-180,179])
+
+	--> trop de travail pour une question bonus, remise à plus tard quand la partie principale du projet sera terminée
+
+- fonction selection_champ_parcours_complet
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Semaine du 27/03 :
+
+- fonction projection_stereo
+- fonction projection_azimutale
+- nécessite clarification pour la parcours restreint
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Semaine du 03/04 :
+
+- sin(r) revient à calculer le sinus d'une distance... hein ?
