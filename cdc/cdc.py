@@ -18,21 +18,21 @@ import math
 ### CATALOGUES ###
 def charge_petit_catalogue(c):
     """ renvoie un catalogue à partir d'une liste d'étoiles c.
-Chaque étoile de la liste c est un dictionnaire dont les champs sont:
- - 'nom' (str): nom de l'étoile
- - 'ra' (float): ascension droite en degrés de 0° à 360°
- - 'de' (float): déclinaison en degrés de -90° à +90°
- - 'Vmag' (float): magnitude apparente
-Valeur renvoyée: un catalogue sous forme d'une liste de dictionnaires
-dont les champs sont:
- - 'nom' (str): nom de l'étoile
- - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
- - 'de_degres' (float): déclinaison en degrés de -90° à +90°
- - 'ra' (float): ascension droite en radians de -pi à +pi
- - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
- - 'mag': magnitude de type float
- CU: aucune
- """
+	Chaque étoile de la liste c est un dictionnaire dont les champs sont:
+ 	- 'nom' (str): nom de l'étoile
+ 	- 'ra' (float): ascension droite en degrés de 0° à 360°
+ 	- 'de' (float): déclinaison en degrés de -90° à +90°
+ 	- 'Vmag' (float): magnitude apparente
+	Valeur renvoyée: un catalogue sous forme d'une liste de dictionnaires
+	dont les champs sont:
+ 	- 'nom' (str): nom de l'étoile
+ 	- 'ra_degres' (float): ascension droite en degrés de 0° à 360°
+ 	- 'de_degres' (float): déclinaison en degrés de -90° à +90°
+ 	- 'ra' (float): ascension droite en radians de -pi à +pi
+ 	- 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
+ 	- 'mag': magnitude de type float
+ 	CU: aucune
+ 	"""
     starcount=0
     catalog=[]
     for cstar in c:
@@ -96,8 +96,6 @@ def charge_bright_star_5(nomfichier):
     print('Catalogue : lu ',starcount,' étoiles')
     return catalog
 
-
-
 ### CALCUL DU CHAMP ###
 def calcul_centre_zone_observee(lat,long,temps,az,alt):
 	'''
@@ -117,33 +115,30 @@ def calcul_centre_zone_observee(lat,long,temps,az,alt):
 	'''
 	long=(long-(temps[0]+temps[1]/60+temps[2]/3600)*15)%360-180
 
-
-
 def selection_champ_parcours_complet(catalogue, centre, rayon):
-    """
-Paramètres :
-    catalogue : un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
-    - 'nom' (str): nom de l'étoile
-    - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
-    - 'de_degres' (float): déclinaison en degrés de -90° à +90°
-    - 'ra' (float): ascension droite en radians de -pi à +pi
-    - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
-    - 'mag' (float): magnitude de type float
-    centre : un couple de flottants (RA0, DE0) des coordonnées en radians du centre de la zone observée
-    rayon : un flottant indiquant le rayon de la zone observée
-Sortie : un catalogue de même forme comportant les étoiles du catalogue en paramètre qui son dans le rayon du cercle
 	"""
-    sinDE0=math.sin(centre[1])
-    cosDE0=math.cos(centre[1])
-    sortie=[]
-    istar = 0
-    while istar<len(catalogue) :
-        print("Test pour l'étoile d'index",istar)
-        if rayon>=math.acos(sinDE0*math.sin(catalogue[istar]['de'])+cosDE0*math.cos(catalogue[istar]['de'])*math.cos(math.fabs(centre[0]-catalogue[istar]['ra']))):
-            print("Un étoile a été trouvée :",catalogue[istar],sep="\n")
-            sortie.append(istar)
-        istar+=1
-    return sortie
+	Paramètres :
+		catalogue : un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
+	        - 'nom' (str): nom de l'étoile
+	        - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
+	        - 'de_degres' (float): déclinaison en degrés de -90° à +90°
+	        - 'ra' (float): ascension droite en radians de -pi à +pi
+	        - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
+	        - 'mag' (float): magnitude de type float
+		centre : un couple de flottants (RA0, DE0) des coordonnées en radians du centre de la zone observée
+		rayon : un flottant indiquant le rayon de la zone observée
+	Sortie : un catalogue de même forme comportant les étoiles du catalogue en paramètre qui son dans le rayon du cercle
+	"""
+	sinDE0=math.sin(centre[1])
+	cosDE0=math.cos(centre[1])
+	sortie=[]
+	istar = 0
+	l = len(catalogue)
+	while istar < l :
+		if rayon>=math.acos(sinDE0*math.sin(catalogue[istar]['de'])+cosDE0*math.cos(catalogue[istar]['de'])*math.cos(math.fabs(centre[0]-catalogue[istar]['ra']))):
+			sortie.append(istar)
+		istar += 1
+	return sortie
 
 def compare(x,y,cle):
 	"""
@@ -169,18 +164,15 @@ def tri_insert(l, cle):
 	paramètre cle : clé selon laquelle les dictionnaires seront triés
     valeur renvoyée : (NoneType) aucune
     effet de bord : modifie la liste l en triant ses dictionnaires selon la valeur associée à la clé cle
-		ajoute à chaque dictionnaire une association 'index':(int) qui indique la position du dictionnaire dans la liste originelle
     CU : l liste de dictionnaires comportant tous la clé cle
     """
     n = len(l)
-    l[0]['index'] = 0
     for i in range(1, n):
-        l[i]['index'] = i
-    aux = l[i]
-    k = i
-    while k >= 1 and comp(aux, l[k - 1], cle) == -1:
-        l[k] = l[k - 1]
-        k = k - 1
+        aux = l[i]
+        k = i
+        while k >= 1 and comp(aux, l[k - 1], cle) == -1:
+            l[k] = l[k - 1]
+            k = k - 1
         l[k] = aux
 
 def selection_champ_parcours_restreint(catalogue, centre, rayon):
@@ -197,27 +189,13 @@ def selection_champ_parcours_restreint(catalogue, centre, rayon):
 		rayon : un flottant indiquant le rayon de la zone observée
 	Sortie : un catalogue de même forme comportant les étoiles du catalogue en paramètre qui son dans le rayon du cercle
     """
-    sortie = []
-    tri_insert(catalogue,'de')
-    sinDE0 = math.sin(centre[1])
-    cosDE0 = math.cos(centre[1])
-    i = 0
-    while rayon<=math.acos(sinDE0*math.sin(catalogue[i]['de'])+cosDE0*math.cos(catalogue[i]['de'])*math.cos(math.fabs(centre[0]-catalogue[i]['ra']))):
-        i+=1
-    debde = i
-    cat_mid = []
-    while rayon>=math.acos(sinDE0*math.sin(catalogue[i]['de'])+cosDE0*math.cos(catalogue[i]['de'])*math.cos(math.fabs(centre[0]-catalogue[i]['ra']))):
-    	cat_mid.append(catalogue[i])
-    	i+=1
-    tri_insert(cat_mid,'ra')
-    i = 0
-    sinr = math.sin(rayon)
 
 ### CHANGEMENT DE REPERE SUR LA SPHERE ###
 def changement_de_repere(point, origine):
-    """renvoie les coordonnées du point de coordonnées sphériques point
-dans le repère dont l'origine est le point de coordonnées sphériques origine.
-CU: aucune
+    """
+	renvoie les coordonnées du point de coordonnées sphériques point
+	dans le repère dont l'origine est le point de coordonnées sphériques origine.
+	CU: les coordonnées sont en radian
     """
     ra, de = point
     ra0, de0 = origine
@@ -232,11 +210,11 @@ CU: aucune
 ### PROJECTIONS ###
 def projection_equirectangulaire(point):
     """
-renvoie les coordonnées (x,y) dans le plan du point de coordonnées sphériques point
-pour la projection equirectangulaire.
- - point (float, float): couple (ra, de) des coordonnées sphériques du point à projeter
- - valeur renvoyée (float, float): couple (x,y) des coordonnées du point projeté dans le plan
- CU: aucune
+	renvoie les coordonnées (x,y) dans le plan du point de coordonnées sphériques point
+	pour la projection equirectangulaire.
+ 	- point (float, float): couple (ra, de) des coordonnées sphériques du point à projeter
+ 	- valeur renvoyée (float, float): couple (x,y) des coordonnées du point projeté dans le plan
+ 	CU: aucune
     """
     ra, de = point
     x = ra
@@ -245,11 +223,11 @@ pour la projection equirectangulaire.
 
 def projection_aitoff(point):
     """
-renvoie les coordonnées (x,y) dans le plan du point de coordonnées sphériques point
-pour la projection aitoff.
- - point (float, float): couple (ra, de) des coordonnées sphériques du point à projeter
- - valeur renvoyée (float, float): couple (x,y) des coordonnées du point projeté dans le plan
- CU: aucune
+	renvoie les coordonnées (x,y) dans le plan du point de coordonnées sphériques point
+	pour la projection aitoff.
+ 	- point (float, float): couple (ra, de) des coordonnées sphériques du point à projeter
+ 	- valeur renvoyée (float, float): couple (x,y) des coordonnées du point projeté dans le plan
+ 	CU: aucune
     """
     ra, de = point
     alpha=math.acos(math.cos(de)*math.cos(ra/2.0))
@@ -261,34 +239,34 @@ pour la projection aitoff.
     y=math.sin(de)/sincalpha
     return (x, y)
 
-def projection_stereo(point):
+def projection_stereographic(point):
 	"""
-renvoie les coordonnées (x,y) dans le plan du point de coordonnées sphériques point
-pour la projection stéréographique.
- - point (float, float): couple (ra, de) des coordonnées sphériques du point à projeter
- - valeur renvoyée (float, float): couple (x,y) des coordonnées du point projeté dans le plan
- CU: aucune
+	renvoie les coordonnées (x,y) dans le plan du point de coordonnées sphériques point
+	pour la projection stéréographique.
+ 	- point (float, float): couple (ra, de) des coordonnées sphériques du point à projeter
+ 	- valeur renvoyée (float, float): couple (x,y) des coordonnées du point projeté dans le plan
+ 	CU: aucune
  	"""
 	RA,DE = point
-	x1 = cos(DE) * sin(RA)
-	y1 = sin(DE)
-	k = 2 / (1.0 + cos(DE) * cos(RA))
+	x1 = math.cos(DE) * math.sin(RA)
+	y1 = math.sin(DE)
+	k = 2 / (1.0 + math.cos(DE) * math.cos(RA))
 	x = k * x1
 	y = k * y1
 	return (x,y)
 
-def projection_azimutale(point):
+def projection_lambert_equal_area(point):
 	"""
-renvoie les coordonnées (x,y) dans le plan du point de coordonnées sphériques point
-pour la projection azimutale équivalent de Lambert.
- - point (float, float): couple (ra, de) des coordonnées sphériques du point à projeter
- - valeur renvoyée (float, float): couple (x,y) des coordonnées du point projeté dans le plan
- CU: aucune
+	renvoie les coordonnées (x,y) dans le plan du point de coordonnées sphériques point
+	pour la projection azimutale équivalent de Lambert.
+ 	- point (float, float): couple (ra, de) des coordonnées sphériques du point à projeter
+ 	- valeur renvoyée (float, float): couple (x,y) des coordonnées du point projeté dans le plan
+ 	CU: aucune
     """
 	RA,DE=point
-	x1 = cos(DE) * sin(RA)
-	y1 = sin(DE)
-	k = sqrt(abs(2 / (1.0 + cos(DE) * cos(RA))))
+	x1 = math.cos(DE) * math.sin(RA)
+	y1 = math.sin(DE)
+	k = math.sqrt(abs(2 / (1.0 + math.cos(DE) * math.cos(RA))))
 	x = k * x1
 	y = k * y1
 	return (x,y)
@@ -296,13 +274,13 @@ pour la projection azimutale équivalent de Lambert.
 ### ECHELLE ###
 def echelle_projection(projection, rayon, largeur, hauteur):
     """
-renvoie l'échelle à utiliser pour effectuer le dessin d'une zone de rayon rayon
-en utilisant la projection projection dans une fenêtre de taille largeurxhauteur
- - projection (function): fonction de projection
- - rayon (float): rayon de la zone à projeter en radians
- - largeur, hauteur (int): taille de la fenêtre où l'on projette en pixels
-Valeur renvoyée (float): échelle en pixels par radian
-CU: rayon positif non nul
+	renvoie l'échelle à utiliser pour effectuer le dessin d'une zone de rayon rayon
+	en utilisant la projection projection dans une fenêtre de taille largeurxhauteur
+ 	- projection (function): fonction de projection
+ 	- rayon (float): rayon de la zone à projeter en radians
+ 	- largeur, hauteur (int): taille de la fenêtre où l'on projette en pixels
+	Valeur renvoyée (float): échelle en pixels par radian
+	CU: rayon positif non nul
     """
     assert rayon > 0, 'echelle_projection: le rayon doit être strictement positif'
     if projection==projection_equirectangulaire or projection==projection_aitoff:
@@ -320,12 +298,12 @@ CU: rayon positif non nul
 ### SORTIE CSV ###
 def champ_vers_csv(catalogue, champ, nomfichier='sortiecdc.csv'):
     """
-crée un fichier csv contenant les étoiles du champ d'étoiles champ provenant du catalogue catalogue.
- - catalogue (list): catalogue d'étoiles
- - champ (list): liste des index dans catalogue des étoiles du champ sélectionné
- - nomfichier (str): nom du fichier csv à créer (ou écraser)
- - valeur renvoyée: aucune
- CU: aucune
+	crée un fichier csv contenant les étoiles du champ d'étoiles champ provenant du catalogue catalogue.
+ 	- catalogue (list): catalogue d'étoiles
+ 	- champ (list): liste des index dans catalogue des étoiles du champ sélectionné
+ 	- nomfichier (str): nom du fichier csv à créer (ou écraser)
+ 	- valeur renvoyée: aucune
+ 	CU: aucune
     """
     if type(nomfichier) == str:
         f=open(nomfichier, mode='w')
@@ -345,9 +323,19 @@ crée un fichier csv contenant les étoiles du champ d'étoiles champ provenant 
     f.close()
 
 ### IMPRESSION DE LA CARTE ###
-def imprimer_carte(catalogue, centre, rayon, projection, selection,
-                   largeur=512, hauteur=512, nomfichier="sortiecdc.svg"):
-    print('imprimer_carte: à compléter')
+def imprimer_carte(catalogue, centre, rayon, projection, selection, largeur=512, hauteur=512, nomfichier="sortiecdc.svg"):
+    if type(nomfichier) == str:
+        f=open(nomfichier, mode='w')
+    else:
+        f=nomfichier
+    f.write('<svg width="'+str(largeur)+'" height="'+str(hauteur)+'" style="background-color: white;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n')
+    select = selection(catalogue, centre, rayon)
+    for istar in select :
+        coordonnees = projection(changement_de_repere((catalogue[istar]["ra"] , catalogue[istar]["de"]) , centre))
+        print(coordonnees)
+
+
+    f.close()
 
 
 ### PROGRAMME PRINCIPAL EN MODE TEXTE ###
@@ -416,7 +404,6 @@ def main():
     #choix de la projection
     projection=projection_equirectangulaire
     #projection=projection_aitoff
-
     if formatsortie=='csv':
         champ=selection(catalogue, centre, rayon)
         champ_vers_csv(catalogue, champ, nomfichier=sortie)
