@@ -324,16 +324,21 @@ def champ_vers_csv(catalogue, champ, nomfichier='sortiecdc.csv'):
 
 ### IMPRESSION DE LA CARTE ###
 def imprimer_carte(catalogue, centre, rayon, projection, selection, largeur=512, hauteur=512, nomfichier="sortiecdc.svg"):
+    """
+    Ne marche pas
+    """
     if type(nomfichier) == str:
         f=open(nomfichier, mode='w')
     else:
         f=nomfichier
     f.write('<svg width="'+str(largeur)+'" height="'+str(hauteur)+'" style="background-color: white;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n')
     select = selection(catalogue, centre, rayon)
+    echelle = echelle_projection(projection, rayon, largeur, hauteur)
+    print(echelle)
     for istar in select :
         coordonnees = projection(changement_de_repere((catalogue[istar]["ra"] , catalogue[istar]["de"]) , centre))
-        print(coordonnees)
-
+        #coordonnees correspond à quelque chose, reste à savoir quoi...
+        f.write('<circle cx="'+str(echelle*coordonnees[0])+'" cy="'+str(echelle*coordonnees[1])+'" r="'+str(1)+'" />\n')
     f.write('</svg>')
     f.close()
 
