@@ -334,11 +334,22 @@ def imprimer_carte(catalogue, centre, rayon, projection, selection, largeur=512,
     f.write('<svg width="'+str(largeur)+'" height="'+str(hauteur)+'" style="background-color: white;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n')
     select = selection(catalogue, centre, rayon)
     echelle = echelle_projection(projection, rayon, largeur, hauteur)
-    print(echelle)
+    maxmag = 0
+    l_coordonnees = []
     for istar in select :
+        mag = catalogue[istar]['mag']
         coordonnees = projection(changement_de_repere((catalogue[istar]["ra"] , catalogue[istar]["de"]) , centre))
-        coordonnees = (-coordonnees[0]*echelle+largeur//2 , -coordonnees[1]*echelle+hauteur//2)
-        f.write('<circle cx="'+str(coordonnees[0])+'" cy="'+str(coordonnees[1])+'" r="'+str(3)+'" />\n')
+        coordonnees = (-coordonnees[0]*echelle+largeur//2 , -coordonnees[1]*echelle+hauteur//2 , mag)
+        maxmag = max(maxmag , mag)
+        l_coordonnees.append(coordonnees)
+    print(maxmag)
+    for coordonnees in l_coordonnees :
+        r = 0.5
+        separateur = maxmag/5
+        while coordonnees[2] > separateur :
+            r += 0.5
+            separateur += maxmag/5
+        f.write('<circle cx="'+str(coordonnees[0])+'" cy="'+str(coordonnees[1])+'" r="'+str(r)+'" />\n')
     f.write('</svg>')
     f.close()
 
@@ -399,8 +410,8 @@ def main():
 
     # choix catalogue
     import petit_catalogue
-    catalogue=charge_petit_catalogue(petit_catalogue.PETIT_CATALOGUE)
-    #catalogue=charge_bright_star_5("bsc5.dat")
+    #catalogue=charge_petit_catalogue(petit_catalogue.PETIT_CATALOGUE)
+    catalogue=charge_bright_star_5("bsc5.dat")
 
     # Choix du parcours de la selection d'étoiles
     selection=selection_champ_parcours_complet
@@ -413,7 +424,7 @@ def main():
         champ=selection(catalogue, centre, rayon)
         champ_vers_csv(catalogue, champ, nomfichier=sortie)
     else:
-        imprimer_carte(catalogue, centre, rayon, projection, selection, nomfichier=sortie)
+        imprimer_carte(catalogue, centre, rayon, projection, selection, 1024, 1024, nomfichier=sortie)
 
 if __name__ == '__main__' :
     import doctest
