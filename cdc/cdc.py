@@ -334,10 +334,11 @@ def imprimer_carte(catalogue, centre, rayon, projection, selection, largeur=512,
     f.write('<svg width="'+str(largeur)+'" height="'+str(hauteur)+'" style="background-color: white;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">\n')
     select = selection(catalogue, centre, rayon)
     echelle = echelle_projection(projection, rayon, largeur, hauteur)
+    print(echelle)
     for istar in select :
         coordonnees = projection(changement_de_repere((catalogue[istar]["ra"] , catalogue[istar]["de"]) , centre))
-        coordonnees = (-coordonnees[0]-echelle , -coordonnees[1]-echelle)
-        f.write('<circle cx="'+str(coordonnees[0])+'" cy="'+str(coordonnees[1])+'" r="'+str(1)+'" />\n')
+        coordonnees = (-coordonnees[0]*echelle+largeur//2 , -coordonnees[1]*echelle+hauteur//2)
+        f.write('<circle cx="'+str(coordonnees[0])+'" cy="'+str(coordonnees[1])+'" r="'+str(3)+'" />\n')
     f.write('</svg>')
     f.close()
 
