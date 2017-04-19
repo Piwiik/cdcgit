@@ -149,7 +149,7 @@ def callback_menu_projection(e, f, g):
 # buttons
 def callback_imprimer_carte():
     global catalogue, centre, rayon, projection, selection
-    cdc.imprimer_carte(catalogue, centre, rayon, projection, selection)
+    cdc.imprimer_carte(catalogue, centre, rayon, projection, selection, 1024, 1024)
 
 def callback_exporter_csv():
     global catalogue, centre, rayon, selection

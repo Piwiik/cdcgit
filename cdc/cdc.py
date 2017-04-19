@@ -343,12 +343,14 @@ def imprimer_carte(catalogue, centre, rayon, projection, selection, largeur=512,
         maxmag = max(maxmag , mag)
         l_coordonnees.append(coordonnees)
     print(maxmag)
+    separateur = [maxmag*0.50,maxmag*0.75,maxmag*0.83,maxmag*0.95,maxmag]
+    print(separateur)
     for coordonnees in l_coordonnees :
         r = 0.5
-        separateur = maxmag/5
-        while coordonnees[2] > separateur :
+        isep = 0
+        while isep < 5 and coordonnees[2] >= separateur[isep] :
             r += 0.5
-            separateur += maxmag/5
+            isep += 1
         f.write('<circle cx="'+str(coordonnees[0])+'" cy="'+str(coordonnees[1])+'" r="'+str(r)+'" />\n')
     f.write('</svg>')
     f.close()
