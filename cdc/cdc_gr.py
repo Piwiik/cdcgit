@@ -32,7 +32,8 @@ import cdc
 # pour les catalogues, la valeur associée à une entrée est un couple (fonction, paramètre)
 import petit_catalogue
 catalogues={'Petit Catalogue': (cdc.charge_petit_catalogue, petit_catalogue.PETIT_CATALOGUE),
-            'Bright Star Catalog': (cdc.charge_bright_star_5, 'bsc5.dat')
+            'Bright Star Catalog': (cdc.charge_bright_star_5, 'bsc5.dat'),
+			'Henri Draper Catalog': (cdc.charge_henri_draper, 'hd.dat.gz')
             }
 # pour les sélections et projections, la valeur associée est le nom de la fonction à appeler
 # les sélections sont appelées avec les paramètres catalogue, centre et rayon

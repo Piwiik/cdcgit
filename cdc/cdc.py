@@ -96,6 +96,45 @@ def charge_bright_star_5(nomfichier):
     print('Catalogue : lu ',starcount,' étoiles')
     return catalog
 
+def charge_henri_draper(nomarchive) :
+	"""
+	Entrée : nomarchive (str) le nom de l'archive gzip d'où lire les données
+    Sortie : un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
+        - 'nom' (str): nom de l'étoile
+        - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
+        - 'de_degres' (float): déclinaison en degrés de -90° à +90°
+        - 'ra' (float): ascension droite en radians de -pi à +pi
+        - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
+        - 'mag': magnitude de type float
+    CU : nomarchive est une archive gzip contenant un fichier data (extensions .dat.gzip)
+	"""
+	import gzip
+	starcount = 0
+	catalog = list()
+	with gzip.open(nomarchive,'rt') as entree :
+		#On peut lire ligne par ligne car leur longueur est peu élevée et a donc peu d'impact sur la mémoire (moins de 50 caractères)
+		curseur = entree.readline()
+		while curseur != '' :
+			if curseur[29:34] != '     ' or curseur[36:41] != '     ' :
+				star = dict()
+				star['nom'] = 'HR' + curseur[:6].split()[0]
+				star['ra_degres'] = 15*float(curseur[18:20]) + float(curseur[20:23])/40
+				star['ra'] = math.radians(star['ra_degres'])
+				if star['ra'] > math.pi :
+					star['ra'] = star['ra'] - 2.0 * math.pi
+				star['de_degres'] = float(curseur[23]+'1') * (float(curseur[24:26]) + float(curseur[26:28])/60)
+				star['de'] = math.radians(star['de_degres'])
+				try :
+					star['mag'] = float(curseur[29:34])
+				except ValueError :
+					star['mag'] = float(curseur[36:41])
+				catalog.append(star)
+				starcount += 1
+			curseur = entree.readline()
+		print('Catalogue : lu ',starcount,' étoiles')
+		return catalog
+
+
 ### CALCUL DU CHAMP ###
 def calcul_centre_zone_observee(lat,long,temps,az,alt):
 	'''
