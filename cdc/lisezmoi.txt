@@ -27,12 +27,36 @@ Ramener l'heure à une simple modification de la long et lat
 
 Semaine du 27/03 :
 
-- fonction projection_stereo
-- fonction projection_azimutale
+- fonction projection_stereographic
+- fonction projection_lambert_equal_area
 - nécessite clarification pour la parcours restreint
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Semaine du 03/04 :
+Semaines des 03/04, 10/04 et 17/04 :
 
-- sin(r) revient à calculer le sinus d'une distance... hein ?
+- Problème de compréhension de l'énoncé pour le parcours restreint :
+	r est désigné comme rayon mais aussi comme angle de vue, soit une distance et un angle
+	comment faire la différence ? --> Envoi de demandes d'explications par email, mais sans réponse
+- Fonctions compare et tri_insert pour trier les catalogues selon la valeur d'une clé commune à
+	tous les dictionnaires (dans l'optique de trier par déclinaison et par ascension droite)
+
+- Fonction imprimer_carte :
+	Le rayon d'un cercle dépend de la magnitude de l'étoile qu'il représente
+	Le but est de garder une image lisible et pas trop chargée
+	Les rayons sont donc décidés de manière arbitraire en fonction des magnitudes :
+		Les 50% inférieures ont un rayon de 0.5px
+		Les 25% suivantes ont un rayon de 1px
+		Les 12% suivantes ont un rayon de 1.5px
+		Les 8% suivantes ont un rayon de 2px
+		Les 5% supérieures ont un rayon de 2.5px
+		L'étoile avec la plus grande magnitude a un rayon de 3px
+	(voir svg_bsc5_aitoff.png)
+
+- Quelques modifications dans le cdc_gr.py pour ajuster la taille de l'impression via la commande "Imprimer"
+	(Taille de 1440x720)
+
+- Fonction charge_henri_draper :
+	Dans cette fonction de lecture, on se permet de lire ligne par ligne car leur longueur est assez courte
+	(moins de 50 caractères) donc l'impact sur la mémoire est moindre et cela permet de tester dès le début
+	le fait que la magnitude soit définie pour continuer ou non le traitement de l'étoile.

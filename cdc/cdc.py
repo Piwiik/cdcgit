@@ -131,13 +131,14 @@ def charge_henri_draper(nomarchive) :
 				catalog.append(star)
 				starcount += 1
 			curseur = entree.readline()
-		print('Catalogue : lu ',starcount,' étoiles')
-		return catalog
+	print('Catalogue : lu ',starcount,' étoiles')
+	return catalog
 
 
 ### CALCUL DU CHAMP ###
 def calcul_centre_zone_observee(lat,long,temps,az,alt):
 	'''
+	/!\ pas encore implémenté
 	Paramètres :
 		lat : (float) la latitude de l'observateur
 		long : (float) la longitude de l'observateur
@@ -153,6 +154,7 @@ def calcul_centre_zone_observee(lat,long,temps,az,alt):
 		alt est compris entre -90 et 90
 	'''
 	long=(long-(temps[0]+temps[1]/60+temps[2]/3600)*15)%360-180
+	print("Cette fonction n'est pas encore fonctionnelle")
 
 def selection_champ_parcours_complet(catalogue, centre, rayon):
 	"""
@@ -228,6 +230,7 @@ def selection_champ_parcours_restreint(catalogue, centre, rayon):
 		rayon : un flottant indiquant le rayon de la zone observée
 	Sortie : un catalogue de même forme comportant les étoiles du catalogue en paramètre qui son dans le rayon du cercle
     """
+    print("Fonction non implémentée")
 
 ### CHANGEMENT DE REPERE SUR LA SPHERE ###
 def changement_de_repere(point, origine):
@@ -363,9 +366,6 @@ def champ_vers_csv(catalogue, champ, nomfichier='sortiecdc.csv'):
 
 ### IMPRESSION DE LA CARTE ###
 def imprimer_carte(catalogue, centre, rayon, projection, selection, largeur=512, hauteur=512, nomfichier="sortiecdc.svg"):
-    """
-    Ne marche pas
-    """
     if type(nomfichier) == str:
         f=open(nomfichier, mode='w')
     else:
@@ -381,9 +381,7 @@ def imprimer_carte(catalogue, centre, rayon, projection, selection, largeur=512,
         coordonnees = (-coordonnees[0]*echelle+largeur//2 , -coordonnees[1]*echelle+hauteur//2 , mag)
         maxmag = max(maxmag , mag)
         l_coordonnees.append(coordonnees)
-    print(maxmag)
-    separateur = [maxmag*0.50,maxmag*0.75,maxmag*0.83,maxmag*0.95,maxmag]
-    print(separateur)
+    separateur = [maxmag*0.50,maxmag*0.75,maxmag*0.87,maxmag*0.95,maxmag]
     for coordonnees in l_coordonnees :
         r = 0.5
         isep = 0
