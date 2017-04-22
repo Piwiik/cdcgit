@@ -230,7 +230,19 @@ def selection_champ_parcours_restreint(catalogue, centre, rayon):
 		rayon : un flottant indiquant le rayon de la zone observée
 	Sortie : un catalogue de même forme comportant les étoiles du catalogue en paramètre qui son dans le rayon du cercle
     """
-    print("Fonction non implémentée")
+    sinDE0=math.sin(centre[1])
+    #Le pôle nord a une déclinaison de pi/2 radians, l'ascension verticale est donc non nécessaire :
+    contientPoleNord = rayon >= math.acos(sinDE0)
+    #Le pôle sud a une déclinaison de -pi/2 radians donc :
+    contientPoleSud = rayon >= math.acos(-sinDE0)
+    if contientPoleNord and contientPoleSud :
+    	return selection_champ_parcours_complet(catalogue, centre, rayon)
+    elif contientPoleNord :
+    	return "lol"
+    elif contientPoleSud :
+    	return "lol"
+    else :
+    	return "lol"
 
 ### CHANGEMENT DE REPERE SUR LA SPHERE ###
 def changement_de_repere(point, origine):
@@ -390,6 +402,7 @@ def imprimer_carte(catalogue, centre, rayon, projection, selection, largeur=512,
             isep += 1
         f.write('<circle cx="'+str(coordonnees[0])+'" cy="'+str(coordonnees[1])+'" r="'+str(r)+'" />\n')
     f.write('</svg>')
+    print("Impression achevée")
     f.close()
 
 
