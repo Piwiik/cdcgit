@@ -168,7 +168,7 @@ def selection_champ_parcours_complet(catalogue, centre, rayon):
 	        - 'mag' (float): magnitude de type float
 		centre : un couple de flottants (RA0, DE0) des coordonnées en radians du centre de la zone observée
 		rayon : un flottant indiquant le rayon de la zone observée
-	Sortie : un catalogue de même forme comportant les étoiles du catalogue en paramètre qui son dans le rayon du cercle
+	Sortie : une liste des index des étoiles dans le catalogue donné en paramètre qui sont dans le rayon du cercle
 	"""
 	sinDE0=math.sin(centre[1])
 	cosDE0=math.cos(centre[1])
@@ -199,13 +199,16 @@ def compare(x,y,cle):
 	else :
 		return 0
 
-def tri_insert(l, cle):
+def tri_insert(l, cle, indexation=False):
     """
     paramètre l : (list) une liste à trier
 	paramètre cle : clé selon laquelle les dictionnaires seront triés
+	paramètre optionnel indexation : (bool) un booléen
     valeur renvoyée : (NoneType) aucune
     effet de bord : modifie la liste l en triant ses dictionnaires selon la valeur associée à la clé cle
-    CU : l liste de dictionnaires comportant tous la clé cle
+		si indexation=True, il sera aussi rajouté dans chaque dictionnaire une association "index":index où index est l'index (int) du catalogue dans la liste originale
+		sinon, il n'y a pas d'effet additionnel
+	CU : l liste de dictionnaires comportant tous la clé cle
     """
     n = len(l)
     for i in range(1, n):
@@ -228,8 +231,9 @@ def selection_champ_parcours_restreint(catalogue, centre, rayon):
 	        - 'mag' (float): magnitude de type float
 		centre : un couple de flottants (RA0, DE0) des coordonnées en radians du centre de la zone observée
 		rayon : un flottant indiquant le rayon de la zone observée
-	Sortie : un catalogue de même forme comportant les étoiles du catalogue en paramètre qui son dans le rayon du cercle
+	Sortie : une liste des index des étoiles dans le catalogue donné en paramètre qui sont dans le rayon du cercle
     """
+	#La plupart des catalogues sont triés approximativement selon l'ascension droite, on commence donc par trier selon RA
     sinDE0=math.sin(centre[1])
     #Le pôle nord a une déclinaison de pi/2 radians, l'ascension verticale est donc non nécessaire :
     contientPoleNord = rayon >= math.acos(sinDE0)
