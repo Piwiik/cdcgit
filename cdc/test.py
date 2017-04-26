@@ -3,9 +3,8 @@ from petit_catalogue import PETIT_CATALOGUE
 import timeit
 import os
 
-ah = charge_petit_catalogue(PETIT_CATALOGUE)
 
-temps = timeit.timeit("os.system('')")
+temps = timeit.timeit(stmt="os.system('python cdc.py -c 90 20 -r 30 -o svg wow.svg')", globals=globals(), number=5)
 print(temps)
 """
 print()

@@ -211,12 +211,21 @@ def selection_champ_parcours_restreint(catalogue, centre, rayon):
     if contientPoleNord and contientPoleSud :
     	return selection_champ_parcours_complet(catalogue, centre, rayon)
     elif contientPoleNord :
-    	return reduit_parcours(catalogue,min(centre[1]-rayon,centre[1]+rayon),math.pi/2,-math.pi,math.pi)
+    	select = reduit_parcours(catalogue,min(centre[1]-rayon,centre[1]+rayon),math.pi/2,-math.pi,math.pi)
     elif contientPoleSud :
-    	return reduit_parcours(catalogue,-math.pi/2,max(centre[1]-rayon,centre[1]+rayon),-math.pi,math.pi)
+    	select = reduit_parcours(catalogue,-math.pi/2,max(centre[1]-rayon,centre[1]+rayon),-math.pi,math.pi)
     else :
         delta = math.asin(math.sin(rayon)/math.sin(math.pi/2 - centre[1]))
-        return reduit_parcours(catalogue,min(centre[1]-rayon,centre[1]+rayon),max(centre[1]-rayon,centre[1]+rayon),min(centre[0]-delta,centre[0]+delta),max(centre[0]-delta,centre[0]+delta))
+        select = reduit_parcours(catalogue,min(centre[1]-rayon,centre[1]+rayon),max(centre[1]-rayon,centre[1]+rayon),min(centre[0]-delta,centre[0]+delta),max(centre[0]-delta,centre[0]+delta))
+    sinDE0=math.sin(centre[1])
+    cosDE0=math.cos(centre[1])
+    sortie=[]
+    l = len(catalogue)
+    for istar in select :
+        if rayon>=math.acos(sinDE0*math.sin(catalogue[istar]['de'])+cosDE0*math.cos(catalogue[istar]['de'])*math.cos(math.fabs(centre[0]-catalogue[istar]['ra']))):
+            sortie.append(istar)
+    return sortie
+
 
 def compare(x,y,cle):
 	"""
@@ -266,6 +275,23 @@ def compare_ra(x,y)  :
     if x['ra'] < y['ra']:
         return -1
     elif x['ra']> y['ra']:
+        return 1
+    else:
+        return 0
+
+def compare_index(x,y)  :
+    """
+    Paramètres :
+	x, y : (dict) deux dictionnaires ayant tous les deux un élément de clé 'index'
+	Sortie :
+	-1 si x['index'] < y['index']
+	0 si x['index'] == y['index']
+	1 si x['index'] > y['index']
+	CU : x et y ont tout les deux un élément de clé 'index'
+    """
+    if x['index'] < y['index']:
+        return -1
+    elif x['index']> y['index']:
         return 1
     else:
         return 0
@@ -333,7 +359,6 @@ def reduit_parcours(catalogue,inf_de,sup_de,inf_ra,sup_ra):
     Sortie : (list) une liste des index dans le catalogue des étoiles correspondant aux critères maximaux et minimaux
         de déclinaison et d'ascension verticale donnés en paramètre
     """
-    print("Quand même pas ?")
     from functools import cmp_to_key
     catalogue.sort(key=cmp_to_key(compare_de))
     #critères selon la déclinaison
@@ -351,7 +376,7 @@ def reduit_parcours(catalogue,inf_de,sup_de,inf_ra,sup_ra):
     while i_inf < l-1 and select[i_inf]['ra'] < sup_ra :
         sortie.append(select[i_inf]['index'])
         i_inf+=1
-    sortie.sort()
+    catalogue.sort(key=cmp_to_key(compare_index))
     return sortie
 
 ### CHANGEMENT DE REPERE SUR LA SPHERE ###
@@ -574,15 +599,18 @@ def main():
     # choix catalogue
     import petit_catalogue
     #catalogue=charge_petit_catalogue(petit_catalogue.PETIT_CATALOGUE)
-    catalogue=charge_bright_star_5("bsc5.dat")
+    #catalogue=charge_bright_star_5("bsc5.dat")
+    catalogue=charge_henri_draper("hd.dat.gz")
 
     # Choix du parcours de la selection d'étoiles
-    #selection=selection_champ_parcours_complet
-    selection=selection_champ_parcours_restreint
+    selection=selection_champ_parcours_complet
+    #selection=selection_champ_parcours_restreint
 
     #choix de la projection
     projection=projection_equirectangulaire
     #projection=projection_aitoff
+    #projection=projection_stereographic
+    #projection=projection_lambert_equal_area
     if formatsortie=='csv':
         champ=selection(catalogue, centre, rayon)
         champ_vers_csv(catalogue, champ, nomfichier=sortie)
