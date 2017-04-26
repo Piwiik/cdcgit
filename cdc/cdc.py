@@ -159,7 +159,7 @@ def calcul_centre_zone_observee(lat,long,temps,az,alt):
 def selection_champ_parcours_complet(catalogue, centre, rayon):
 	"""
 	Paramètres :
-		catalogue : un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
+		catalogue (list): un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
 	        - 'nom' (str): nom de l'étoile
 	        - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
 	        - 'de_degres' (float): déclinaison en degrés de -90° à +90°
@@ -180,6 +180,37 @@ def selection_champ_parcours_complet(catalogue, centre, rayon):
 			sortie.append(istar)
 		istar += 1
 	return sortie
+
+def selection_champ_parcours_restreint(catalogue, centre, rayon):
+    """
+	NON FINI (potentiellement mortel)
+	Paramètres :
+		catalogue (list): un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
+	        - 'nom' (str): nom de l'étoile
+	        - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
+	        - 'de_degres' (float): déclinaison en degrés de -90° à +90°
+	        - 'ra' (float): ascension droite en radians de -pi à +pi
+	        - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
+	        - 'mag' (float): magnitude de type float
+		centre : un couple de flottants (RA0, DE0) des coordonnées en radians du centre de la zone observée
+		rayon : un flottant indiquant le rayon de la zone observée
+	Sortie : une liste des index des étoiles dans le catalogue donné en paramètre qui sont dans le rayon du cercle
+    """
+	#La plupart des catalogues sont triés approximativement selon l'ascension droite, on commence donc par trier selon RA
+    sinDE0=math.sin(centre[1])
+	#Le pôle nord a une déclinaison de pi/2 radians, l'ascension verticale est donc non nécessaire :
+    contientPoleNord = rayon >= math.acos(sinDE0)
+	#Le pôle sud a une déclinaison de -pi/2 radians donc :
+    contientPoleSud = rayon >= math.acos(-sinDE0)
+    if contientPoleNord and contientPoleSud :
+    	return selection_champ_parcours_complet(catalogue, centre, rayon)
+    elif contientPoleNord :
+    	return reduit_parcours(catalogue,min(centre[1]-rayon,centre[1]+rayon),math.pi/2,-math.pi,math.pi)
+    elif contientPoleSud :
+    	return reduit_parcours(catalogue,-math.pi/2,max(centre[1]-rayon,centre[1]+rayon),-math.pi,math.pi)
+    else :
+        delta = math.asin(math.sin(rayon)/math.sin(math.pi/2 - centre[1]))
+        return reduit_parcours(catalogue,min(centre[1]-rayon,centre[1]+rayon),max(centre[1]-rayon,centre[1]+rayon),min(centre[0]-delta,centre[0]+delta),max(centre[0]-delta,centre[0]+delta))
 
 def compare(x,y,cle):
 	"""
@@ -211,42 +242,82 @@ def tri_insert(l, cle, indexation=False):
 	CU : l liste de dictionnaires comportant tous la clé cle
     """
     n = len(l)
+    if indexation :
+        l[0]['index'] = 0
     for i in range(1, n):
         aux = l[i]
+        if indexation :
+            aux['index'] = i
         k = i
-        while k >= 1 and comp(aux, l[k - 1], cle) == -1:
+        while k >= 1 and compare(aux, l[k - 1], cle) == -1:
             l[k] = l[k - 1]
             k = k - 1
         l[k] = aux
 
-def selection_champ_parcours_restreint(catalogue, centre, rayon):
-    """
+def trouve_inferieur(catalogue,inf,cle,indexation=False):
+	"""
 	Paramètres :
-		catalogue : un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
+		catalogue (list): un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
 	        - 'nom' (str): nom de l'étoile
 	        - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
 	        - 'de_degres' (float): déclinaison en degrés de -90° à +90°
 	        - 'ra' (float): ascension droite en radians de -pi à +pi
 	        - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
 	        - 'mag' (float): magnitude de type float
-		centre : un couple de flottants (RA0, DE0) des coordonnées en radians du centre de la zone observée
-		rayon : un flottant indiquant le rayon de la zone observée
-	Sortie : une liste des index des étoiles dans le catalogue donné en paramètre qui sont dans le rayon du cercle
+		inf (float) : un nombre
+		cle : une clé commune à tous les dictionnaires de catalogue
+		Sortie : (int) Renvoie l'indice dans la liste triée du dictionnaire dont la valeur associée à cle est la plus petite étant supérieure ou égale à inf
+            effet de bord : si indexation=True, il sera aussi rajouté dans chaque dictionnaire une association "index":index où index est l'index (int) du catalogue dans la liste originale
+    		      sinon, il n'y a pas d'effet additionnel
     """
-	#La plupart des catalogues sont triés approximativement selon l'ascension droite, on commence donc par trier selon RA
-    sinDE0=math.sin(centre[1])
-    #Le pôle nord a une déclinaison de pi/2 radians, l'ascension verticale est donc non nécessaire :
-    contientPoleNord = rayon >= math.acos(sinDE0)
-    #Le pôle sud a une déclinaison de -pi/2 radians donc :
-    contientPoleSud = rayon >= math.acos(-sinDE0)
-    if contientPoleNord and contientPoleSud :
-    	return selection_champ_parcours_complet(catalogue, centre, rayon)
-    elif contientPoleNord :
-    	return "lol"
-    elif contientPoleSud :
-    	return "lol"
-    else :
-    	return "lol"
+	tri_insert(catalogue,cle,indexation)
+	l = len(catalogue)
+	a = 0
+	b = l-1
+	while catalogue[a][cle] <= inf :
+		m = (a+b)//2
+		if catalogue[m][cle] == inf :
+			return catalogue[m]['index']
+		elif catalogue[m][cle] > inf :
+			b = m
+		else :
+			a = m+1
+	return a
+
+def reduit_parcours(catalogue,inf_de,sup_de,inf_ra,sup_ra):
+    """
+    Paramètres :
+    catalogue (list): un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
+    - 'nom' (str): nom de l'étoile
+    - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
+    - 'de_degres' (float): déclinaison en degrés de -90° à +90°
+    - 'ra' (float): ascension droite en radians de -pi à +pi
+    - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
+    - 'mag' (float): magnitude de type float
+    inf_de (float) : valeur minimale de déclinaison des étoiles recherchées
+    inf_ra (float) : valeur minimale d'ascension verticale des étoiles recherchées
+    sup_de (float) : valeur maximale de déclinaison des étoiles recherchées
+    sup_ra (float) : valeur maximale d'ascension verticale des étoiles recherchées
+    Sortie : (list) une liste des index dans le catalogue des étoiles correspondant aux critères maximaux et minimaux
+    de déclinaison et d'ascension verticale donnés en paramètre
+    """
+    aux = catalogue #pour éviter d'altérer le catalogue original
+    #critères selon la déclinaison
+    l = len(catalogue)
+    select = []
+    i_inf = trouve_inferieur(aux,inf_de,'de',True)
+    while i_inf < l-1 and aux[i_inf]['de'] < sup_de :
+        select.append(aux[i_inf])
+        i_inf+=1
+    #critères selon l'ascension verticale
+    l = len(select)
+    sortie = []
+    i_inf = trouve_inferieur(select,inf_ra,'ra')
+    while i_inf < l-1 and select[i_inf]['ra'] < sup_ra :
+        sortie.append(select[i_inf]['index'])
+        i_inf+=1
+    sortie.sort()
+    return sortie
 
 ### CHANGEMENT DE REPERE SUR LA SPHERE ###
 def changement_de_repere(point, origine):
@@ -381,7 +452,8 @@ def champ_vers_csv(catalogue, champ, nomfichier='sortiecdc.csv'):
     f.close()
 
 ### IMPRESSION DE LA CARTE ###
-def imprimer_carte(catalogue, centre, rayon, projection, selection, largeur=512, hauteur=512, nomfichier="sortiecdc.svg"):
+def imprimer_carte(catalogue, centre, rayon, projection, selection,
+						largeur=512, hauteur=512, nomfichier="sortiecdc.svg"):
     if type(nomfichier) == str:
         f=open(nomfichier, mode='w')
     else:
@@ -470,8 +542,8 @@ def main():
     catalogue=charge_bright_star_5("bsc5.dat")
 
     # Choix du parcours de la selection d'étoiles
-    selection=selection_champ_parcours_complet
-    #selection=selection_champ_parcours_restreint
+    #selection=selection_champ_parcours_complet
+    selection=selection_champ_parcours_restreint
 
     #choix de la projection
     projection=projection_equirectangulaire
