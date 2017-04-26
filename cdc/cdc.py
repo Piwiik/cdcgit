@@ -47,6 +47,8 @@ def charge_petit_catalogue(c):
         if star['ra'] > math.pi:
             star['ra'] = star['ra'] - 2.0 * math.pi
         star['de'] = math.radians(star['de_degres'])
+        #rajout d'un index pour accélérer le processus de parcours restreint
+        star['index'] = starcount
         catalog.append(star)
         starcount+=1
     print("Petit catalogue: lu "+str(starcount)+" étoiles")
@@ -89,6 +91,8 @@ def charge_bright_star_5(nomfichier):
                 star['de'] = math.radians(star['de_degres'])
                 entree.read(12)
                 star['mag']=float(entree.read(5))
+                #rajout d'un index pour accélérer le processus de parcours restreint
+                star['index'] = starcount
                 catalog.append(star)
                 starcount+=1
             entree.readline()
@@ -97,8 +101,8 @@ def charge_bright_star_5(nomfichier):
     return catalog
 
 def charge_henri_draper(nomarchive) :
-	"""
-	Entrée : nomarchive (str) le nom de l'archive gzip d'où lire les données
+    """
+    Entrée : nomarchive (str) le nom de l'archive gzip d'où lire les données
     Sortie : un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
         - 'nom' (str): nom de l'étoile
         - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
@@ -107,32 +111,34 @@ def charge_henri_draper(nomarchive) :
         - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
         - 'mag': magnitude de type float
     CU : nomarchive est une archive gzip contenant un fichier data (extensions .dat.gzip)
-	"""
-	import gzip
-	starcount = 0
-	catalog = list()
-	with gzip.open(nomarchive,'rt') as entree :
-		#On peut lire ligne par ligne car leur longueur est peu élevée et a donc peu d'impact sur la mémoire (moins de 50 caractères)
-		curseur = entree.readline()
-		while curseur != '' :
-			if curseur[29:34] != '     ' or curseur[36:41] != '     ' :
-				star = dict()
-				star['nom'] = 'HR' + curseur[:6].split()[0]
-				star['ra_degres'] = 15*float(curseur[18:20]) + float(curseur[20:23])/40
-				star['ra'] = math.radians(star['ra_degres'])
-				if star['ra'] > math.pi :
-					star['ra'] = star['ra'] - 2.0 * math.pi
-				star['de_degres'] = float(curseur[23]+'1') * (float(curseur[24:26]) + float(curseur[26:28])/60)
-				star['de'] = math.radians(star['de_degres'])
-				try :
-					star['mag'] = float(curseur[29:34])
-				except ValueError :
-					star['mag'] = float(curseur[36:41])
-				catalog.append(star)
-				starcount += 1
-			curseur = entree.readline()
-	print('Catalogue : lu ',starcount,' étoiles')
-	return catalog
+    """
+    import gzip
+    starcount = 0
+    catalog = list()
+    with gzip.open(nomarchive,'rt') as entree :
+        #On peut lire ligne par ligne car leur longueur est peu élevée et a donc peu d'impact sur la mémoire (moins de 50 caractères)
+        curseur = entree.readline()
+        while curseur != '' :
+            if curseur[29:34] != '     ' or curseur[36:41] != '     ' :
+                star = dict()
+                star['nom'] = 'HR' + curseur[:6].split()[0]
+                star['ra_degres'] = 15*float(curseur[18:20]) + float(curseur[20:23])/40
+                star['ra'] = math.radians(star['ra_degres'])
+                if star['ra'] > math.pi :
+                    star['ra'] = star['ra'] - 2.0 * math.pi
+                star['de_degres'] = float(curseur[23]+'1') * (float(curseur[24:26]) + float(curseur[26:28])/60)
+                star['de'] = math.radians(star['de_degres'])
+                try :
+                    star['mag'] = float(curseur[29:34])
+                except ValueError :
+                    star['mag'] = float(curseur[36:41])
+                #rajout d'un index pour accélérer le processus de parcours restreint
+                star['index'] = starcount
+                catalog.append(star)
+                starcount += 1
+            curseur = entree.readline()
+    print('Catalogue : lu ',starcount,' étoiles')
+    return catalog
 
 
 ### CALCUL DU CHAMP ###
@@ -230,31 +236,59 @@ def compare(x,y,cle):
 	else :
 		return 0
 
-def tri_insert(l, cle, indexation=False):
+def compare_de(x,y):
+	"""
+    Paramètres :
+	x, y : (dict) deux dictionnaires ayant tous les deux un élément de clé 'de'
+	Sortie :
+	-1 si x['de'] < y['de']
+	0 si x['de'] == y['de']
+	1 si x['de'] > y['de']
+	CU : x et y ont tout les deux un élément de clé 'de'
+	"""
+	if x['de'] < y['de'] :
+		return -1
+	elif x['de'] > y['de'] :
+		return 1
+	else :
+           return 0
+
+def compare_ra(x,y)  :
+    """
+    Paramètres :
+	x, y : (dict) deux dictionnaires ayant tous les deux un élément de clé 'ra'
+	Sortie :
+	-1 si x['ra'] < y['ra']
+	0 si x['ra'] == y['ra']
+	1 si x['ra'] > y['ra']
+	CU : x et y ont tout les deux un élément de clé 'ra'
+    """
+    if x['ra'] < y['ra']:
+        return -1
+    elif x['ra']> y['ra']:
+        return 1
+    else:
+        return 0
+
+
+def tri_insert(l, cle):
     """
     paramètre l : (list) une liste à trier
 	paramètre cle : clé selon laquelle les dictionnaires seront triés
-	paramètre optionnel indexation : (bool) un booléen
     valeur renvoyée : (NoneType) aucune
     effet de bord : modifie la liste l en triant ses dictionnaires selon la valeur associée à la clé cle
-		si indexation=True, il sera aussi rajouté dans chaque dictionnaire une association "index":index où index est l'index (int) du catalogue dans la liste originale
-		sinon, il n'y a pas d'effet additionnel
 	CU : l liste de dictionnaires comportant tous la clé cle
     """
     n = len(l)
-    if indexation :
-        l[0]['index'] = 0
     for i in range(1, n):
         aux = l[i]
-        if indexation :
-            aux['index'] = i
         k = i
         while k >= 1 and compare(aux, l[k - 1], cle) == -1:
             l[k] = l[k - 1]
             k = k - 1
         l[k] = aux
 
-def trouve_inferieur(catalogue,inf,cle,indexation=False):
+def trouve_inferieur(catalogue,inf,cle):
 	"""
 	Paramètres :
 		catalogue (list): un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
@@ -265,12 +299,10 @@ def trouve_inferieur(catalogue,inf,cle,indexation=False):
 	        - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
 	        - 'mag' (float): magnitude de type float
 		inf (float) : un nombre
-		cle : une clé commune à tous les dictionnaires de catalogue
-		Sortie : (int) Renvoie l'indice dans la liste triée du dictionnaire dont la valeur associée à cle est la plus petite étant supérieure ou égale à inf
-            effet de bord : si indexation=True, il sera aussi rajouté dans chaque dictionnaire une association "index":index où index est l'index (int) du catalogue dans la liste originale
-    		      sinon, il n'y a pas d'effet additionnel
+        cle : une clé commune à tous les dictionnaires du catalogue
+	Sortie : (int) Renvoie l'indice dans la liste triée du dictionnaire dont la valeur associée à cle est la plus petite étant supérieure ou égale à inf
+    CU : catalogue est trié selon les valeurs associées à la clé cle dans les dictionnaires
     """
-	tri_insert(catalogue,cle,indexation)
 	l = len(catalogue)
 	a = 0
 	b = l-1
@@ -287,31 +319,34 @@ def trouve_inferieur(catalogue,inf,cle,indexation=False):
 def reduit_parcours(catalogue,inf_de,sup_de,inf_ra,sup_ra):
     """
     Paramètres :
-    catalogue (list): un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
-    - 'nom' (str): nom de l'étoile
-    - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
-    - 'de_degres' (float): déclinaison en degrés de -90° à +90°
-    - 'ra' (float): ascension droite en radians de -pi à +pi
-    - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
-    - 'mag' (float): magnitude de type float
-    inf_de (float) : valeur minimale de déclinaison des étoiles recherchées
-    inf_ra (float) : valeur minimale d'ascension verticale des étoiles recherchées
-    sup_de (float) : valeur maximale de déclinaison des étoiles recherchées
-    sup_ra (float) : valeur maximale d'ascension verticale des étoiles recherchées
+        catalogue (list): un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
+        - 'nom' (str): nom de l'étoile
+        - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
+        - 'de_degres' (float): déclinaison en degrés de -90° à +90°
+        - 'ra' (float): ascension droite en radians de -pi à +pi
+        - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
+        - 'mag' (float): magnitude de type float
+        inf_de (float) : valeur minimale de déclinaison des étoiles recherchées
+        inf_ra (float) : valeur minimale d'ascension verticale des étoiles recherchées
+        sup_de (float) : valeur maximale de déclinaison des étoiles recherchées
+        sup_ra (float) : valeur maximale d'ascension verticale des étoiles recherchées
     Sortie : (list) une liste des index dans le catalogue des étoiles correspondant aux critères maximaux et minimaux
-    de déclinaison et d'ascension verticale donnés en paramètre
+        de déclinaison et d'ascension verticale donnés en paramètre
     """
-    aux = catalogue #pour éviter d'altérer le catalogue original
+    print("Quand même pas ?")
+    from functools import cmp_to_key
+    catalogue.sort(key=cmp_to_key(compare_de))
     #critères selon la déclinaison
     l = len(catalogue)
     select = []
-    i_inf = trouve_inferieur(aux,inf_de,'de',True)
-    while i_inf < l-1 and aux[i_inf]['de'] < sup_de :
-        select.append(aux[i_inf])
+    i_inf = trouve_inferieur(catalogue,inf_de,'de')
+    while i_inf < l-1 and catalogue[i_inf]['de'] < sup_de :
+        select.append(catalogue[i_inf])
         i_inf+=1
     #critères selon l'ascension verticale
     l = len(select)
     sortie = []
+    select.sort(key=cmp_to_key(compare_ra))
     i_inf = trouve_inferieur(select,inf_ra,'ra')
     while i_inf < l-1 and select[i_inf]['ra'] < sup_ra :
         sortie.append(select[i_inf]['index'])
