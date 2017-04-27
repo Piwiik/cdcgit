@@ -33,13 +33,15 @@ import cdc
 import petit_catalogue
 catalogues={'Petit Catalogue': (cdc.charge_petit_catalogue, petit_catalogue.PETIT_CATALOGUE),
             'Bright Star Catalog': (cdc.charge_bright_star_5, 'bsc5.dat'),
-			'Henri Draper Catalog': (cdc.charge_henri_draper, 'hd.dat.gz')
+            'Henri Draper Catalog': (cdc.charge_henri_draper, 'hd.dat.gz'),
+            'Hipparcos Catalog': (cdc.charge_hipparcos, 'hip2.dat.gz')
             }
 # pour les sélections et projections, la valeur associée est le nom de la fonction à appeler
 # les sélections sont appelées avec les paramètres catalogue, centre et rayon
 # et doivent renvoyer une liste d'index dans le catalogue des étoiles sélectionnées
 selections={'Parcours Complet': cdc.selection_champ_parcours_complet,
-            'Parcours Restreint': cdc.selection_champ_parcours_restreint
+            'Parcours Restreint': cdc.selection_champ_parcours_restreint,
+            'Parcours OMG du batard': cdc.selection_omg 
             }
 # les projections sont appelées avec un paramètre point qui est un couple de flottants,
 # et doivent renvoyer le point projeté sous forme d'un couple de flottants

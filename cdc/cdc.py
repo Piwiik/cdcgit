@@ -30,7 +30,7 @@ def charge_petit_catalogue(c):
  	- 'de_degres' (float): déclinaison en degrés de -90° à +90°
  	- 'ra' (float): ascension droite en radians de -pi à +pi
  	- 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
- 	- 'mag': magnitude de type float
+    - 'mag'(float): magnitude
  	CU: aucune
  	"""
     starcount=0
@@ -47,8 +47,6 @@ def charge_petit_catalogue(c):
         if star['ra'] > math.pi:
             star['ra'] = star['ra'] - 2.0 * math.pi
         star['de'] = math.radians(star['de_degres'])
-        #rajout d'un index pour accélérer le processus de parcours restreint
-        star['index'] = starcount
         catalog.append(star)
         starcount+=1
     print("Petit catalogue: lu "+str(starcount)+" étoiles")
@@ -63,7 +61,7 @@ def charge_bright_star_5(nomfichier):
         - 'de_degres' (float): déclinaison en degrés de -90° à +90°
         - 'ra' (float): ascension droite en radians de -pi à +pi
         - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
-        - 'mag': magnitude de type float
+        - 'mag'(float): magnitude
     CU : nomfichier est sous le format du Bright Star Catalogue : http://cdsarc.u-strasbg.fr/viz-bin/Cat?V/50
     """
     starcount=0
@@ -91,13 +89,11 @@ def charge_bright_star_5(nomfichier):
                 star['de'] = math.radians(star['de_degres'])
                 entree.read(12)
                 star['mag']=float(entree.read(5))
-                #rajout d'un index pour accélérer le processus de parcours restreint
-                star['index'] = starcount
                 catalog.append(star)
                 starcount+=1
             entree.readline()
             curseur=entree.read(4)
-    print('Catalogue : lu ',starcount,' étoiles')
+    print('Bright Star Catalog : lu ',starcount,' étoiles')
     return catalog
 
 def charge_henri_draper(nomarchive) :
@@ -109,15 +105,15 @@ def charge_henri_draper(nomarchive) :
         - 'de_degres' (float): déclinaison en degrés de -90° à +90°
         - 'ra' (float): ascension droite en radians de -pi à +pi
         - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
-        - 'mag': magnitude de type float
+        - 'mag'(float): magnitude
     CU : nomarchive est une archive gzip contenant un fichier data (extensions .dat.gzip)
     """
     import gzip
     starcount = 0
     catalog = list()
-    with gzip.open(nomarchive,'rt') as entree :
+    with gzip.open(nomarchive,'rt') as sitestriste :
         #On peut lire ligne par ligne car leur longueur est peu élevée et a donc peu d'impact sur la mémoire (moins de 50 caractères)
-        curseur = entree.readline()
+        curseur = sitestriste.readline()
         while curseur != '' :
             if curseur[29:34] != '     ' or curseur[36:41] != '     ' :
                 star = dict()
@@ -132,14 +128,47 @@ def charge_henri_draper(nomarchive) :
                     star['mag'] = float(curseur[29:34])
                 except ValueError :
                     star['mag'] = float(curseur[36:41])
-                #rajout d'un index pour accélérer le processus de parcours restreint
-                star['index'] = starcount
                 catalog.append(star)
                 starcount += 1
-            curseur = entree.readline()
-    print('Catalogue : lu ',starcount,' étoiles')
+            curseur = sitestriste.readline()
+    print('Henri Draper Catalog : lu ',starcount,' étoiles')
     return catalog
 
+def charge_hipparcos(nomarchive):
+    """
+    Entrée : nomarchive (str) le nom de l'archive gzip d'où lire les données
+    Sortie : un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
+        - 'nom' (str): nom de l'étoile
+        - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
+        - 'de_degres' (float): déclinaison en degrés de -90° à +90°
+        - 'ra' (float): ascension droite en radians de -pi à +pi
+        - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
+        - 'mag'(float): magnitude
+    CU : nomarchive est une archive gzip contenant un fichier data (extensions .dat.gzip)
+    """
+    import gzip
+    starcount = 0
+    catalog = list()
+    with gzip.open(nomarchive,'rt') as sitestriste :
+        curseur = sitestriste.read(6)
+        while curseur!='' :
+            star = dict()
+            star['nom'] = 'HR'+curseur
+            sitestriste.read(9)
+            star['ra'] = float(sitestriste.read(13))
+            if star['ra'] > math.pi:
+                star['ra'] = star['ra'] - 2.0 * math.pi
+            star['ra_degres'] = math.degrees(star['ra'])
+            sitestriste.read(1)
+            star['de'] = float(sitestriste.read(13))
+            sitestriste.read(87)
+            star['mag'] = float(sitestriste.read(7))
+            catalog.append(star)
+            starcount+=1
+            sitestriste.readline()
+            curseur = sitestriste.read(6)
+    print('Hipparcos Catalog : lu ',starcount,' étoiles')
+    return catalog
 
 ### CALCUL DU CHAMP ###
 def calcul_centre_zone_observee(lat,long,temps,az,alt):
@@ -189,7 +218,6 @@ def selection_champ_parcours_complet(catalogue, centre, rayon):
 
 def selection_champ_parcours_restreint(catalogue, centre, rayon):
     """
-	NON FINI (potentiellement mortel)
 	Paramètres :
 		catalogue (list): un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
 	        - 'nom' (str): nom de l'étoile
@@ -211,12 +239,12 @@ def selection_champ_parcours_restreint(catalogue, centre, rayon):
     if contientPoleNord and contientPoleSud :
     	return selection_champ_parcours_complet(catalogue, centre, rayon)
     elif contientPoleNord :
-    	select = reduit_parcours(catalogue,min(centre[1]-rayon,centre[1]+rayon),math.pi/2,-math.pi,math.pi)
+    	select = omg(catalogue,min(centre[1]-rayon,centre[1]+rayon),math.pi/2,-math.pi,math.pi)
     elif contientPoleSud :
-    	select = reduit_parcours(catalogue,-math.pi/2,max(centre[1]-rayon,centre[1]+rayon),-math.pi,math.pi)
+    	select = omg(catalogue,-math.pi/2,max(centre[1]-rayon,centre[1]+rayon),-math.pi,math.pi)
     else :
         delta = math.asin(math.sin(rayon)/math.sin(math.pi/2 - centre[1]))
-        select = reduit_parcours(catalogue,min(centre[1]-rayon,centre[1]+rayon),max(centre[1]-rayon,centre[1]+rayon),min(centre[0]-delta,centre[0]+delta),max(centre[0]-delta,centre[0]+delta))
+        select = omg(catalogue,min(centre[1]-rayon,centre[1]+rayon),max(centre[1]-rayon,centre[1]+rayon),min(centre[0]-delta,centre[0]+delta),max(centre[0]-delta,centre[0]+delta))
     sinDE0=math.sin(centre[1])
     cosDE0=math.cos(centre[1])
     sortie=[]
@@ -225,7 +253,6 @@ def selection_champ_parcours_restreint(catalogue, centre, rayon):
         if rayon>=math.acos(sinDE0*math.sin(catalogue[istar]['de'])+cosDE0*math.cos(catalogue[istar]['de'])*math.cos(math.fabs(centre[0]-catalogue[istar]['ra']))):
             sortie.append(istar)
     return sortie
-
 
 def compare(x,y,cle):
 	"""
@@ -296,7 +323,6 @@ def compare_index(x,y)  :
     else:
         return 0
 
-
 def tri_insert(l, cle):
     """
     paramètre l : (list) une liste à trier
@@ -352,10 +378,10 @@ def reduit_parcours(catalogue,inf_de,sup_de,inf_ra,sup_ra):
         - 'ra' (float): ascension droite en radians de -pi à +pi
         - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
         - 'mag' (float): magnitude de type float
-        inf_de (float) : valeur minimale de déclinaison des étoiles recherchées
-        inf_ra (float) : valeur minimale d'ascension verticale des étoiles recherchées
-        sup_de (float) : valeur maximale de déclinaison des étoiles recherchées
-        sup_ra (float) : valeur maximale d'ascension verticale des étoiles recherchées
+        inf_de (float) : valeur minimale de déclinaison des étoiles recherchées en radians
+        inf_ra (float) : valeur minimale d'ascension verticale des étoiles recherchées en radians
+        sup_de (float) : valeur maximale de déclinaison des étoiles recherchées en radians
+        sup_ra (float) : valeur maximale d'ascension verticale des étoiles recherchées en radians
     Sortie : (list) une liste des index dans le catalogue des étoiles correspondant aux critères maximaux et minimaux
         de déclinaison et d'ascension verticale donnés en paramètre
     """
@@ -377,6 +403,80 @@ def reduit_parcours(catalogue,inf_de,sup_de,inf_ra,sup_ra):
         sortie.append(select[i_inf]['index'])
         i_inf+=1
     catalogue.sort(key=cmp_to_key(compare_index))
+    return sortie
+
+def omg(catalogue,inf_de,sup_de,inf_ra,sup_ra):
+    """
+    Paramètres :
+        catalogue (list): un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
+        - 'nom' (str): nom de l'étoile
+        - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
+        - 'de_degres' (float): déclinaison en degrés de -90° à +90°
+        - 'ra' (float): ascension droite en radians de -pi à +pi
+        - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
+        - 'mag' (float): magnitude de type float
+        inf_de (float) : valeur minimale de déclinaison des étoiles recherchéesen radians
+        inf_ra (float) : valeur minimale d'ascension verticale des étoiles recherchéesen radians
+        sup_de (float) : valeur maximale de déclinaison des étoiles recherchéesen radians
+        sup_ra (float) : valeur maximale d'ascension verticale des étoiles recherchéesen radians
+    Sortie : (list) une liste des index dans le catalogue des étoiles correspondant aux critères maximaux et minimaux
+        de déclinaison et d'ascension verticale donnés en paramètre
+    """
+    sortie = []
+    starcount = 0
+    for star in catalogue :
+        if inf_de<=star['de']<=sup_de and inf_ra<=star['ra']<=sup_ra :
+            sortie.append(starcount)
+        starcount+=1
+    return sortie
+
+def selection_omg(catalogue, centre, rayon):
+    """
+	Paramètres :
+		catalogue (list): un catalogue sous forme d'une liste de dictionnaires dont les champs sont:
+	        - 'nom' (str): nom de l'étoile
+	        - 'ra_degres' (float): ascension droite en degrés de 0° à 360°
+	        - 'de_degres' (float): déclinaison en degrés de -90° à +90°
+	        - 'ra' (float): ascension droite en radians de -pi à +pi
+	        - 'de' (float): déclinaison en radians de type -pi/2 à +pi/2
+	        - 'mag' (float): magnitude de type float
+		centre : un couple de flottants (RA0, DE0) des coordonnées en radians du centre de la zone observée
+		rayon : un flottant indiquant le rayon de la zone observée
+	Sortie : une liste des index des étoiles dans le catalogue donné en paramètre qui sont dans le rayon du cercle
+    """
+	#La plupart des catalogues sont triés approximativement selon l'ascension droite, on commence donc par trier selon RA
+    sinDE0=math.sin(centre[1])
+    cosDE0=math.cos(centre[1])
+	#Le pôle nord a une déclinaison de pi/2 radians, l'ascension verticale est donc non nécessaire :
+    contientPoleNord = rayon >= math.acos(sinDE0)
+	#Le pôle sud a une déclinaison de -pi/2 radians donc :
+    contientPoleSud = rayon >= math.acos(-sinDE0)
+    sortie = []
+    starcount = 0
+    if contientPoleNord and contientPoleSud :
+    	return selection_champ_parcours_complet(catalogue, centre, rayon)
+    elif contientPoleNord :
+        inf_de, sup_de, inf_ra, sup_ra = min(centre[1]-rayon,centre[1]+rayon), math.pi/2, -math.pi, math.pi
+        for star in catalogue :
+            if inf_de<=star['de']<=sup_de and inf_ra<=star['ra']<=sup_ra :
+                if rayon>=math.acos(sinDE0*math.sin(star['de'])+cosDE0*math.cos(star['de'])*math.cos(math.fabs(centre[0]-star['ra']))):
+                    sortie.append(starcount)
+            starcount+=1
+    elif contientPoleSud :
+        inf_de, sup_de, inf_ra, sup_ra = -math.pi/2, max(centre[1]-rayon,centre[1]+rayon), -math.pi, math.pi
+        for star in catalogue :
+            if inf_de<=star['de']<=sup_de and inf_ra<=star['ra']<=sup_ra :
+                if rayon>=math.acos(sinDE0*math.sin(star['de'])+cosDE0*math.cos(star['de'])*math.cos(math.fabs(centre[0]-star['ra']))):
+                    sortie.append(starcount)
+            starcount+=1
+    else :
+        delta = math.asin(math.sin(rayon)/math.sin(math.pi/2 - centre[1]))
+        inf_de, sup_de, inf_ra, sup_ra = min(centre[1]-rayon,centre[1]+rayon), max(centre[1]-rayon,centre[1]+rayon), min(centre[0]-delta,centre[0]+delta), max(centre[0]-delta,centre[0]+delta)
+        for star in catalogue :
+            if inf_de<=star['de']<=sup_de and inf_ra<=star['ra']<=sup_ra :
+                if rayon>=math.acos(sinDE0*math.sin(star['de'])+cosDE0*math.cos(star['de'])*math.cos(math.fabs(centre[0]-star['ra']))):
+                    sortie.append(starcount)
+            starcount+=1
     return sortie
 
 ### CHANGEMENT DE REPERE SUR LA SPHERE ###
