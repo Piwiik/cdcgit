@@ -41,7 +41,8 @@ catalogues={'Petit Catalogue': (cdc.charge_petit_catalogue, petit_catalogue.PETI
 # et doivent renvoyer une liste d'index dans le catalogue des étoiles sélectionnées
 selections={'Parcours Complet': cdc.selection_champ_parcours_complet,
             'Parcours Restreint': cdc.selection_champ_parcours_restreint,
-            'Parcours OMG du batard': cdc.selection_omg 
+            'Parcours OMG du batard': cdc.selection_omg,
+            'Parcours Nouveau': cdc.nouveau_parcours_restreint
             }
 # les projections sont appelées avec un paramètre point qui est un couple de flottants,
 # et doivent renvoyer le point projeté sous forme d'un couple de flottants
